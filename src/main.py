@@ -3,10 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+from .config import settings
 
 app = FastAPI(title="KPI Management API")
 
@@ -20,7 +17,7 @@ app.add_middleware(
 )
 
 # Database URL
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+SQLALCHEMY_DATABASE_URL = f"postgresql://{settings.database_user}:{settings.database_password}@{settings.database_host}:{settings.database_port}/{settings.database_name}"
 
 # Database engine
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
