@@ -1,6 +1,8 @@
 services:
   postgres:
-    image: postgres:15-alpine
+    build:
+      context: ./containers/postgresql
+      dockerfile: Dockerfile
     container_name: kpi_postgres
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
