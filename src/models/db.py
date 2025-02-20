@@ -6,7 +6,7 @@ Base = declarative_base()
 
 class Database:
     def __init__(self):
-        self.engine = create_engine()
+        self.engine = create_engine('postgresql://username:password@localhost/dbname')
         self.connect_db()
     
     def connect_db(self):

@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     database_name : str
         データベースの名前。環境変数 `DATABASE_NAME` から取得します。デフォルトは `"my_database"` です。
     
+    redis_host : str
+        Redisのホスト名。環境変数 `REDIS_HOST` から取得します。デフォルトは `"redis"` です。
+    redis_port : int
+        Redisのポート番号。環境変数 `REDIS_PORT` から取得します。デフォルトは `6379` です。
+    
     api_host : str
         APIサーバーのホスト名。環境変数 `API_HOST` から取得します。デフォルトは `"0.0.0.0"` です。
     api_port : int
@@ -53,6 +58,10 @@ class Settings(BaseSettings):
     database_user: str = Field("admin", env="DATABASE_USER")
     database_password: str = Field("my_database_password", env="DATABASE_PASSWORD")
     database_name: str = Field("my_database", env="DATABASE_NAME")
+    
+    # Redis設定
+    redis_host: str = Field("redis", env="REDIS_HOST")
+    redis_port: int = Field(6379, env="REDIS_PORT")
     
     # API設定
     api_host: str = Field("0.0.0.0", env="API_HOST")
