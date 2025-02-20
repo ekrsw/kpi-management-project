@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     """
 
     # データベース設定
+    database: str = "postgresql"
     database_host: str = Field("db", env="DATABASE_HOST")
     database_port: int = Field(5432, env="DATABASE_PORT")
     database_user: str = Field("admin", env="DATABASE_USER")
