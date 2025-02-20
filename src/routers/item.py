@@ -1,192 +1,141 @@
-from fastapi import APIRouter, Depends, HTTPException
 from typing import List
-from sqlalchemy.ext.asyncio import AsyncSession
-from ..db.schemas import schemas, crud
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 from ..db.dependencies import get_db
+from ..db.crud import item as crud
+from ..db.schemas.item import Item, ItemCreate, ItemUpdate
 
 router = APIRouter(
-    prefix="/items",
-    tags=["items"],
+    prefix="/api/items",
+    tags=["Items"]
 )
 
 
-@router.post("/", response_model=schemas.Item)
-async def create_item(
-        item: schemas.ItemCreate,
-        db: AsyncSession = Depends(get_db)
-        ) -> schemas.Item:
+@router.get("", response_model=List[Item])
+def read_items(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
     """
-    新しいアイテムを作成します。
-
-    このエンドポイントは、提供されたアイテム情報を基に新しいアイテムをデータベースに作成します。
-    認証されたユーザーのみがアクセスできます。
-
-    Parameters
-    ----------
-    item : schemas.ItemCreate
-        作成するアイテムの情報を含むスキーマ。
-    db : AsyncSession
-        データベースセッション。依存関係として提供されます。
-    current_user : schemas.User
-        現在認証されているユーザー。依存関係として提供されます。
-
-    Returns
-    -------
-    schemas.Item
-        作成されたアイテムの詳細を含むレスポンスモデル。
-    """
-    # 新しいアイテムを作成して返す
-    return await crud.create_item(db=db, item=item)
-
-
-@router.get("/", response_model=List[schemas.Item])
-async def read_items(
-        skip: int = 0,
-        limit: int = 10,
-        db: AsyncSession = Depends(get_db)
-        ) -> List[schemas.Item]:
-    """
-    複数のアイテムを取得します。
-
-    このエンドポイントは、指定された範囲内でアイテムのリストをデータベースから取得します。
-    認証されたユーザーのみがアクセスできます。
+    アイテムの一覧を取得します。
 
     Parameters
     ----------
     skip : int, optional
-        スキップするレコード数。デフォルトは0。
+        スキップする件数, by default 0
     limit : int, optional
-        取得するレコード数の上限。デフォルトは10。
-    db : AsyncSession
-        データベースセッション。依存関係として提供されます。
-    current_user : schemas.User
-        現在認証されているユーザー。依存関係として提供されます。
+        取得する最大件数, by default 100
+    db : Session
+        データベースセッション
 
     Returns
     -------
-    List[schemas.Item]
-        取得したアイテムのリスト。
+    List[Item]
+        アイテムオブジェクトのリスト
     """
-    # 指定された範囲でアイテムを取得して返す
-    return await crud.get_items(db, skip=skip, limit=limit)
+    return crud.get_items(db, skip=skip, limit=limit)
 
 
-@router.get("/{item_id}", response_model=schemas.Item)
-async def read_item(
-        item_id: int,
-        db: AsyncSession = Depends(get_db)
-        ) -> schemas.Item:
+@router.get("/{item_id}", response_model=Item)
+def read_item(item_id: UUID, db: Session = Depends(get_db)):
     """
-    特定のアイテムを取得します。
-
-    このエンドポイントは、指定されたアイテムIDに基づいてアイテムをデータベースから取得します。
-    アイテムが存在しない場合は404エラーを返します。
-    認証されたユーザーのみがアクセスできます。
+    指定されたIDのアイテムを取得します。
 
     Parameters
     ----------
-    item_id : int
-        取得対象のアイテムID。
-    db : AsyncSession
-        データベースセッション。依存関係として提供されます。
-    current_user : schemas.User
-        現在認証されているユーザー。依存関係として提供されます。
+    item_id : UUID
+        取得するアイテムのID
+    db : Session
+        データベースセッション
 
     Returns
     -------
-    schemas.Item
-        取得したアイテムの詳細を含むレスポンスモデル。
+    Item
+        アイテムオブジェクト
 
     Raises
     ------
     HTTPException
-        アイテムが存在しない場合に404 Not Foundエラーを返します。
+        アイテムが見つからない場合は404エラー
     """
-    # アイテムをデータベースから取得
-    db_item = await crud.get_item(db, item_id=item_id)
+    db_item = crud.get_item(db, item_id=item_id)
     if db_item is None:
-        # アイテムが存在しない場合は404エラーを返す
         raise HTTPException(status_code=404, detail="Item not found")
     return db_item
 
 
-@router.put("/{item_id}", response_model=schemas.Item)
-async def update_item(
-        item_id: int,
-        item: schemas.ItemCreate,
-        db: AsyncSession = Depends(get_db)
-        ) -> schemas.Item:
+@router.post("", response_model=Item, status_code=201)
+def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     """
-    特定のアイテムを更新します。
-
-    このエンドポイントは、指定されたアイテムIDに基づいてアイテムをデータベース内で更新します。
-    アイテムが存在しない場合は404エラーを返します。
-    認証されたユーザーのみがアクセスできます。
+    新しいアイテムを作成します。
 
     Parameters
     ----------
-    item_id : int
-        更新対象のアイテムID。
-    item : schemas.ItemCreate
-        更新後のアイテム情報を含むスキーマ。
-    db : AsyncSession
-        データベースセッション。依存関係として提供されます。
-    current_user : schemas.User
-        現在認証されているユーザー。依存関係として提供されます。
+    item : ItemCreate
+        作成するアイテムの情報
+    db : Session
+        データベースセッション
 
     Returns
     -------
-    schemas.Item
-        更新されたアイテムの詳細を含むレスポンスモデル。
+    Item
+        作成されたアイテムオブジェクト
+    """
+    return crud.create_item(db=db, item=item)
+
+
+@router.put("/{item_id}", response_model=Item)
+def update_item(
+    item_id: UUID,
+    item: ItemUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    指定されたIDのアイテムを更新します。
+
+    Parameters
+    ----------
+    item_id : UUID
+        更新するアイテムのID
+    item : ItemUpdate
+        更新する情報
+    db : Session
+        データベースセッション
+
+    Returns
+    -------
+    Item
+        更新されたアイテムオブジェクト
 
     Raises
     ------
     HTTPException
-        アイテムが存在しない場合に404 Not Foundエラーを返します。
+        アイテムが見つからない場合は404エラー
     """
-    # アイテムをデータベースで更新
-    updated_item = await crud.update_item(db=db, item_id=item_id, item=item)
-    if updated_item is None:
-        # アイテムが存在しない場合は404エラーを返す
+    db_item = crud.update_item(db=db, item_id=item_id, item=item)
+    if db_item is None:
         raise HTTPException(status_code=404, detail="Item not found")
-    return updated_item
+    return db_item
 
 
-@router.delete("/{item_id}", response_model=dict)
-async def delete_item(
-        item_id: int,
-        db: AsyncSession = Depends(get_db),
-        current_user: schemas.User = Depends(get_current_user)
-        ) -> dict:
+@router.delete("/{item_id}", status_code=204)
+def delete_item(item_id: UUID, db: Session = Depends(get_db)):
     """
-    特定のアイテムを削除します。
-
-    このエンドポイントは、指定されたアイテムIDに基づいてアイテムをデータベースから削除します。
-    アイテムが存在しない場合は404エラーを返します。
-    認証されたユーザーのみがアクセスできます。
+    指定されたIDのアイテムを削除します。
 
     Parameters
     ----------
-    item_id : int
-        削除対象のアイテムID。
-    db : AsyncSession
-        データベースセッション。依存関係として提供されます。
-    current_user : schemas.User
-        現在認証されているユーザー。依存関係として提供されます。
-
-    Returns
-    -------
-    dict
-        削除の詳細を含むレスポンス。例: {"detail": "Item deleted"}
+    item_id : UUID
+        削除するアイテムのID
+    db : Session
+        データベースセッション
 
     Raises
     ------
     HTTPException
-        アイテムが存在しない場合に404 Not Foundエラーを返します。
+        アイテムが見つからない場合は404エラー
     """
-    # アイテムをデータベースから削除
-    deleted_item = await crud.delete_item(db=db, item_id=item_id)
-    if deleted_item is None:
-        # アイテムが存在しない場合は404エラーを返す
+    if not crud.delete_item(db=db, item_id=item_id):
         raise HTTPException(status_code=404, detail="Item not found")
-    return {"detail": "Item deleted"}

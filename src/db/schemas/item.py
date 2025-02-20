@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict, constr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
 
 class ItemBase(BaseModel):
@@ -10,28 +11,43 @@ class ItemBase(BaseModel):
     Attributes
     ----------
     name : str
-        アイテムの名前。
+        アイテムの名前
+    description : Optional[str]
+        アイテムの説明
     """
-    
-    name: str # カスタムバリデーションで検証
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+
     @field_validator('name')
     def name_must_not_be_empty(cls, v):
         if not v.strip():
             raise ValueError('Name must not be empty')
-        return v
+        return v.strip()
 
-    class Config:
-        from_attributes = True
-        model_config = ConfigDict()
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ItemCreate(ItemBase):
     """
-    アイテム作成時のモデル（追加のプロパティはなし）
-
-    このクラスは `ItemBase` を継承しており、アイテム作成時に必要な基本項目を提供します。
-    特別な追加項目はありません。
+    アイテム作成時のモデル
     """
-    pass  # ItemBaseを継承し、特別な追加項目はない
+    pass
+
+
+class ItemUpdate(BaseModel):
+    """
+    アイテム更新時のモデル（全てのフィールドがオプショナル）
+    """
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+
+    @field_validator('name')
+    def name_must_not_be_empty(cls, v):
+        if v is not None and not v.strip():
+            raise ValueError('Name must not be empty')
+        return v.strip() if v else v
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Item(ItemBase):
@@ -40,17 +56,15 @@ class Item(ItemBase):
 
     Attributes
     ----------
-    id : int
-        アイテムの一意のID。
+    id : UUID
+        アイテムの一意のID
     created_at : datetime
-        アイテムが作成された日時。
+        作成日時
     updated_at : datetime
-        アイテムが最後に更新された日時。
+        更新日時
     """
-    id: int  # アイテムの一意のID
-    created_at: datetime  # 作成日時
-    updated_at: datetime  # 更新日時
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
 
-    class Config:
-        from_attributes = True  # ORM モードを有効にして属性から値を取得できるようにする
-        model_config = ConfigDict()
+    model_config = ConfigDict(from_attributes=True)

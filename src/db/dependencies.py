@@ -1,20 +1,23 @@
-from .models.database import AsyncSessionLocal
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
+from typing import Generator
+from sqlalchemy.orm import Session
+from .models.database import SessionLocal
 
 
-async def get_db() -> AsyncSession:
+def get_db() -> Generator[Session, None, None]:
     """
     データベースセッションを取得するための依存関数です。
 
-    この関数は、非同期セッションファクトリ `AsyncSessionLocal` を使用して
+    この関数は、セッションファクトリ `SessionLocal` を使用して
     データベースセッションを生成し、FastAPIの依存関係として提供します。
     リクエストごとに新しいセッションを作成し、リクエスト終了時にセッションをクローズします。
 
     Yields
     ------
-    AsyncSession
+    Session
         使用中のデータベースセッションオブジェクト。
     """
-    async with AsyncSessionLocal() as session:
-        yield session
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

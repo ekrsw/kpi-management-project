@@ -1,125 +1,124 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import update, delete
-from .src.db.models import item as item_model
-from .src.db.schemas import item as item_schema
-from typing import Optional, List
+from typing import List, Optional
+from uuid import UUID
+from sqlalchemy.orm import Session
+from sqlalchemy import select, update, delete
+from ..models.item import Item
+from ..schemas.item import ItemCreate, ItemUpdate
 
 
-# アイテムIDで特定のアイテムを取得する関数
-async def get_item(db: AsyncSession, item_id: int) -> Optional[item_model.Item]:
+def get_item(db: Session, item_id: UUID) -> Optional[Item]:
     """
-    アイテムIDで特定のアイテムを取得します。
+    指定されたIDのアイテムを取得します。
 
     Parameters
     ----------
-    db : AsyncSession
-        データベースセッション。
-    item_id : int
-        取得するアイテムのID。
+    db : Session
+        データベースセッション
+    item_id : UUID
+        取得するアイテムのID
 
     Returns
     -------
-    Optional[models.Item]
-        見つかった場合はアイテムオブジェクト、存在しない場合はNone。
+    Optional[Item]
+        アイテムが見つかった場合はアイテムオブジェクト、見つからなかった場合はNone
     """
-    result = await db.execute(select(item_model.Item).filter(item_model.Item.id == item_id))
-    return result.scalars().first()
+    return db.get(Item, item_id)
 
-# 複数のアイテムを取得する関数
-async def get_items(db: AsyncSession, skip: int = 0, limit: int = 10) -> List[item_model.Item]:
+
+def get_items(db: Session, skip: int = 0, limit: int = 100) -> List[Item]:
     """
-    アイテムのリストを取得します（ページング可能）。
+    アイテムの一覧を取得します。
 
     Parameters
     ----------
-    db : AsyncSession
-        データベースセッション。
+    db : Session
+        データベースセッション
     skip : int, optional
-        取得をスキップするレコード数（デフォルトは0）。
+        スキップする件数, by default 0
     limit : int, optional
-        取得する最大レコード数（デフォルトは10）。
+        取得する最大件数, by default 100
 
     Returns
     -------
-    List[models.Item]
-        アイテムオブジェクトのリスト。
+    List[Item]
+        アイテムオブジェクトのリスト
     """
-    result = await db.execute(select(item_model.Item).offset(skip).limit(limit))
-    return result.scalars().all()
+    return list(db.execute(select(Item).offset(skip).limit(limit)).scalars())
 
-# 新しいアイテムを作成する関数
-async def create_item(db: AsyncSession, item: item_schema.ItemCreate) -> item_model.Item:
+
+def create_item(db: Session, item: ItemCreate) -> Item:
     """
     新しいアイテムを作成します。
 
     Parameters
     ----------
-    db : AsyncSession
-        データベースセッション。
-    item : schemas.ItemCreate
-        新規アイテムの情報を含むスキーマ。
+    db : Session
+        データベースセッション
+    item : ItemCreate
+        作成するアイテムの情報
 
     Returns
     -------
-    models.Item
-        作成された新しいアイテムオブジェクト。
+    Item
+        作成されたアイテムオブジェクト
     """
-    db_item = item_model.Item(name=item.name)
+    db_item = Item(**item.model_dump())
     db.add(db_item)
-    await db.commit()
-    await db.refresh(db_item)
+    db.commit()
+    db.refresh(db_item)
     return db_item
 
-# アイテムを更新する関数
-async def update_item(db: AsyncSession, item_id: int, item: item_schema.ItemCreate) -> Optional[item_model.Item]:
+
+def update_item(db: Session, item_id: UUID, item: ItemUpdate) -> Optional[Item]:
     """
-    アイテムIDでアイテムを更新します。
+    指定されたIDのアイテムを更新します。
 
     Parameters
     ----------
-    db : AsyncSession
-        データベースセッション。
-    item_id : int
-        更新するアイテムのID。
-    item : schemas.ItemCreate
-        更新するアイテム情報を含むスキーマ。
+    db : Session
+        データベースセッション
+    item_id : UUID
+        更新するアイテムのID
+    item : ItemUpdate
+        更新する情報
 
     Returns
     -------
-    Optional[models.Item]
-        更新されたアイテムオブジェクト。アイテムが存在しない場合はNone。
+    Optional[Item]
+        更新されたアイテムオブジェクト、アイテムが見つからなかった場合はNone
     """
-    result = await db.execute(select(item_model.Item).filter(item_model.Item.id == item_id))
-    db_item = result.scalars().first()
-    if db_item is None:
-        return None
-    db_item.name = item.name
-    await db.commit()
-    await db.refresh(db_item)
-    return db_item
+    update_data = item.model_dump(exclude_unset=True)
+    if not update_data:
+        return get_item(db, item_id)
 
-# アイテムを削除する関数
-async def delete_item(db: AsyncSession, item_id: int) -> Optional[item_model.Item]:
+    result = db.execute(
+        update(Item)
+        .where(Item.id == item_id)
+        .values(**update_data)
+        .returning(Item)
+    )
+    db.commit()
+    
+    updated_item = result.scalar_one_or_none()
+    return updated_item
+
+
+def delete_item(db: Session, item_id: UUID) -> bool:
     """
-    アイテムIDでアイテムを削除します。
+    指定されたIDのアイテムを削除します。
 
     Parameters
     ----------
-    db : AsyncSession
-        データベースセッション。
-    item_id : int
-        削除するアイテムのID。
+    db : Session
+        データベースセッション
+    item_id : UUID
+        削除するアイテムのID
 
     Returns
     -------
-    Optional[models.Item]
-        削除されたアイテムオブジェクト。アイテムが存在しない場合はNone。
+    bool
+        削除に成功した場合はTrue、アイテムが見つからなかった場合はFalse
     """
-    result = await db.execute(select(item_model.Item).filter(item_model.Item.id == item_id))
-    db_item = result.scalars().first()
-    if db_item is None:
-        return None
-    await db.delete(db_item)
-    await db.commit()
-    return db_item
+    result = db.execute(delete(Item).where(Item.id == item_id))
+    db.commit()
+    return result.rowcount > 0

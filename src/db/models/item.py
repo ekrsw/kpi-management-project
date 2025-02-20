@@ -1,5 +1,5 @@
 from .database import BaseDatabase
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, String, Text
 
 
 class Item(BaseDatabase):
@@ -8,11 +8,18 @@ class Item(BaseDatabase):
 
     Attributes
     ----------
-    id : sqlalchemy.Column
-        アイテムの一意な識別子。プライマリキーであり、インデックスが作成されています。
-    name : sqlalchemy.Column
-        アイテムの名前。インデックスが作成されており、必須項目です。
+    id : UUID
+        アイテムの一意な識別子（BaseDatabaseから継承）
+    name : str
+        アイテムの名前
+    description : str
+        アイテムの説明
+    created_at : datetime
+        作成日時（BaseDatabaseから継承）
+    updated_at : datetime
+        更新日時（BaseDatabaseから継承）
     """
     __tablename__ = "items"
 
-    name = Column(String, index=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
