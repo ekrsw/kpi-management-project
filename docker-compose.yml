@@ -1,7 +1,7 @@
 services:
   postgres:
     build:
-      context: ./containers/postgresql
+      context: ./backend/containers/postgresql
       dockerfile: Dockerfile
     container_name: kpi_postgres
     environment:
@@ -10,7 +10,7 @@ services:
       - POSTGRES_DB=${DATABASE_NAME:-my_database}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./containers/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/containers/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "${DATABASE_PORT:-5432}:5432"
     healthcheck:
@@ -22,7 +22,7 @@ services:
   fastapi:
     build:
       context: ./backend
-      dockerfile: ../containers/fast_api/Dockerfile
+      dockerfile: ./containers/fast_api/Dockerfile
     container_name: kpi_fastapi
     environment:
       - DATABASE_HOST=postgres
@@ -48,7 +48,7 @@ services:
 
   nginx:
     build:
-      context: ./containers/nginx
+      context: ./backend/containers/nginx
       dockerfile: Dockerfile
     container_name: kpi_nginx
     ports:
@@ -58,7 +58,7 @@ services:
 
   redis:
     build:
-      context: ./containers/redis
+      context: ./backend/containers/redis
       dockerfile: Dockerfile
     container_name: kpi_redis
     ports:
