@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session, sessionmaker
 # プロジェクトルートディレクトリをPYTHONPATHに追加
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.core.config import settings
-from src.db.models.database import Base
+from app.core.config import settings
+from app.db.models.database import Base
 
 
 # テスト用のデータベースURL

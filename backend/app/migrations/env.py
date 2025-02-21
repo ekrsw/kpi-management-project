@@ -16,9 +16,9 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from src.db.models.database import Base
-from src.db.models.item import Item  # モデルをインポート
-from src.db.models.admin import Admin  # 正しいクラス名でインポート
+from app.db.models.database import Base
+from app.db.models.item import Item  # モデルをインポート
+from app.db.models.admin import Admin  # 正しいクラス名でインポート
 
 target_metadata = Base.metadata
 

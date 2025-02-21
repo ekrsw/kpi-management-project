@@ -4,8 +4,8 @@ from alembic.config import Config
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from src.db.models.database import Base
-from src.db.models.item import Item
+from app.db.models.database import Base
+from app.db.models.item import Item
 
 
 def test_migrations_stairway(alembic_config: Config, postgres_engine: Engine) -> None:

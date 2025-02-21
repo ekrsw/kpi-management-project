@@ -10,7 +10,7 @@ from sqlalchemy.dialects.sqlite import TEXT
 from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 
-from src.db.schemas.item import ItemCreate, ItemUpdate
+from app.db.schemas.item import ItemCreate, ItemUpdate
 
 # SQLite用のUUID型
 class UUID_SQLite(TypeDecorator):
