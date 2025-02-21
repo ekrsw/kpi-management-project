@@ -1,3 +1,9 @@
+-- Create database if not exists
+CREATE DATABASE my_database;
+
+-- Connect to the database
+\c my_database;
+
 -- Create extension if needed
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
