@@ -10,8 +10,17 @@ Item モデルに対する CRUD 操作のユニットテストを実装してい
 
 **テストの実行方法**
 
+Docker コンテナ環境でテストを実行します：
+
 ```bash
-python -m pytest tests/db/crud/test_item.py -v
+# 特定のテストファイルを実行
+docker exec -it kpi_fastapi pytest tests/db/crud/test_item.py -v
+
+# マイグレーションテストを実行
+docker exec -it kpi_fastapi pytest tests/db/test_migrations.py -v
+
+# 全てのテストを実行
+docker exec -it kpi_fastapi pytest tests -v
 ```
 
 **テストの内容**
@@ -40,19 +49,22 @@ python -m pytest tests/db/crud/test_item.py -v
 
 **テスト環境**
 
-- インメモリ SQLite データベースを使用
-- 各テストケース実行後にデータベースをクリーンアップ
-- UUID と Datetime 型の SQLite 互換実装
+- PostgreSQL データベースを使用（テスト用の別データベースを自動作成）
+- 各テストケース実行後にデータを自動クリーンアップ
+- uuid-ossp エクステンションを自動設定
+- マイグレーションの自動適用とロールバック
 
 **テストファイル構成**
 
 ```
 tests/
 ├── __init__.py
-├── conftest.py          # テスト全体の設定
+├── conftest.py          # テスト全体の設定とフィクスチャ
+├── pytest.ini          # pytestの設定
 └── db/
     ├── __init__.py
+    ├── test_migrations.py  # マイグレーションテスト
     └── crud/
         ├── __init__.py
-        └── test_item.py # Item CRUDテスト
+        └── test_item.py    # Item CRUDテスト
 ```
