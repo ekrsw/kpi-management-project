@@ -54,36 +54,39 @@ class Settings(BaseSettings):
 
     # データベース設定
     database: str = "postgresql"
-    database_host: str = Field("db", env="DATABASE_HOST")
-    database_port: int = Field(5432, env="DATABASE_PORT")
-    database_user: str = Field("admin", env="DATABASE_USER")
-    database_password: str = Field("my_database_password", env="DATABASE_PASSWORD")
-    database_name: str = Field("my_database", env="DATABASE_NAME")
+    database_host: str = Field("db")
+    database_port: int = Field(5432)
+    database_user: str = Field("admin")
+    database_password: str = Field("my_database_password")
+    database_name: str = Field("my_database")
     
     # Redis設定
-    redis_host: str = Field("redis", env="REDIS_HOST")
-    redis_port: int = Field(6379, env="REDIS_PORT")
+    redis_host: str = Field("redis")
+    redis_port: int = Field(6379)
     
     # API設定
-    api_host: str = Field("0.0.0.0", env="API_HOST")
-    api_port: int = Field(8000, env="API_PORT")
+    api_host: str = Field("0.0.0.0")
+    api_port: int = Field(8000)
     
     # Nginx設定
-    nginx_port: int = Field(8080, env="NGINX_PORT")
+    nginx_port: int = Field(8080)
     
     # JWT設定
-    secret_key: str = Field(..., env="SECRET_KEY")
-    algorithm: str = Field("HS256", env="ALGORITHM")
-    access_token_expire_minutes: int = Field(30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
-    refresh_algorithm: str = Field("HS256", env="REFRESH_ALGORITHM")
-    refresh_secret_key: str = Field(..., env="REFRESH_SECRET_KEY")
-    refresh_token_expire_minutes: int = Field(1440, env="REFRESH_TOKEN_EXPIRE_MINUTES")
+    secret_key: str = Field(...)
+    algorithm: str = Field("HS256")
+    access_token_expire_minutes: int = Field(30)
+    refresh_algorithm: str = Field("HS256")
+    refresh_secret_key: str = Field(...)
+    refresh_token_expire_minutes: int = Field(1440)
     
     # 初期管理者ユーザー設定
-    initial_admin_username: str = Field(..., env="INITIAL_ADMIN_USERNAME")
-    initial_admin_password: str = Field(..., env="INITIAL_ADMIN_PASSWORD")
+    initial_admin_username: str = Field(...)
+    initial_admin_password: str = Field(...)
     
-    model_config = ConfigDict(env_file=".env")
+    model_config = ConfigDict(
+        env_file=".env",
+        alias_generator=lambda field_name: field_name.upper()
+    )
 
 
 settings = Settings()
