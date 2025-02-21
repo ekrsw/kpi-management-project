@@ -18,7 +18,6 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 from app.db.models.database import Base
 from app.db.models.item import Item  # モデルをインポート
-from app.db.models.admin import Admin  # 正しいクラス名でインポート
 
 target_metadata = Base.metadata
 

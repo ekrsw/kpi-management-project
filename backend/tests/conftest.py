@@ -41,6 +41,11 @@ def postgres_engine():
         conn.execute(text("COMMIT"))  # DROP DATABASE後にコミット
         conn.execute(text(f"CREATE DATABASE {settings.database_name}_test"))
         conn.execute(text("COMMIT"))
+        conn.execute(text(f"""
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+            GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO {settings.database_user};
+        """))
+        conn.execute(text("COMMIT"))
     
     # テスト用データベースに接続
     engine = create_engine(TEST_DATABASE_URL)
