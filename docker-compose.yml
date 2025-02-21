@@ -21,8 +21,8 @@ services:
 
   fastapi:
     build:
-      context: .
-      dockerfile: containers/fast_api/Dockerfile
+      context: ./backend
+      dockerfile: ../containers/fast_api/Dockerfile
     container_name: kpi_fastapi
     environment:
       - DATABASE_HOST=postgres
@@ -39,7 +39,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     volumes:
-      - .:/app
+      - ./backend:/app
     depends_on:
       postgres:
         condition: service_healthy
